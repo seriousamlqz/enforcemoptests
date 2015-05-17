@@ -1,0 +1,55 @@
+package edu.illinois.enforcemop.examples.tck;
+
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock.*;
+import java.util.concurrent.locks.*;
+import edu.illinois.enforcemop.examples.tck.*;
+
+enforce ReentrantLockTest_testGetWaitQueueLength() {
+	
+ 	String awaitThreadOne = "awaitThread1";
+
+	String awaitThreadTwo = "awaitThread2";
+
+	String mainThread = "main";
+
+
+	event beforelockone before():
+	      call (* Lock+.lock(..)) && threadBlocked(awaitThreadTwo) && threadBlocked(awaitThreadOne) && threadName(mainThread) && countCond(count < 4){
+	      }
+
+	event beforelocktwo before():
+	      call (* Lock+.lock(..)) && threadName(mainThread) && countCond(count == 4){
+	      }
+
+	event afterruntwo after():
+	      execution (* Runnable+.run(..)) && threadName(awaitThreadTwo){
+	      }
+
+	event afterrunone after():
+	      execution (* Runnable+.run(..)) && threadName(awaitThreadOne){
+	      }
+
+	event beforeawaittwo before():
+	      call (* Lock+.lock(..)) && threadName(awaitThreadTwo) && threadBlocked(awaitThreadOne){
+	      }
+
+	event beforeawaitone before():
+	      call (* Condition+.await(..)) && threadName(awaitThreadOne){
+	      }
+
+ 
+		
+	ere : beforeawaitone beforeawaittwo beforelockone afterrunone afterruntwo beforelocktwo
+
+	@nonfail {
+		System.out.println("validate.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

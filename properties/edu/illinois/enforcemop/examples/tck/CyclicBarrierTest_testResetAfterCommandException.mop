@@ -1,0 +1,59 @@
+import java.util.*;
+import java.util.concurrent.*;
+
+enforce CyclicBarrierTest_testResetAfterCommandException() {
+	
+	String mainThread = "";
+	String waitThreadOne = "";
+	String waitThreadTwo = "";
+	int count = 0;
+	event beforestart before() :
+	      call (* Thread+.start()) {
+
+	      if (mainThread.equals("")) {
+	     	 mainThread = Thread.currentThread().getName();
+	      }
+
+              waitThreadOne = "";
+	      waitThreadTwo = "";
+	      count = 0;
+
+		 }
+
+	event beforeawait before() :
+		call(* CyclicBarrier+.await(..)) && threadName(mainThread) && condition(count == 0){
+		}
+
+	event afterawait after() :
+		call(* CyclicBarrier+.await(..))  && threadName(mainThread) && condition(count == 0){
+		       ++count;
+		}
+
+	event beforeotherawait before() :
+		call(* CyclicBarrier+.await(..)) && condition(!Thread.currentThread().getName().equals(mainThread)){
+		       if (waitThreadOne.equals("")) {
+		       	 waitThreadOne = Thread.currentThread().getName(); 
+		       } else if (waitThreadTwo.equals("")) {
+		       	 waitThreadTwo = Thread.currentThread().getName(); 
+		       }
+
+		}
+
+
+	event beforesecondawait before() :
+		call(* CyclicBarrier+.await(..)) && threadName(mainThread) && condition(count == 1) && threadBlocked(waitThreadOne) && threadBlocked(waitThreadTwo){
+
+		}
+
+
+	ere : (beforestart beforestart  beforeotherawait beforeotherawait beforeawait afterawait beforeotherawait beforeotherawait beforesecondawait)+
+
+	@nonfail {
+		System.out.println("nonfail.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

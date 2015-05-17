@@ -1,0 +1,59 @@
+package edu.illinois.enforcemop.examples.tck;
+
+import java.util.*;
+import java.util.concurrent.*;
+import edu.illinois.enforcemop.examples.tck.*;
+
+enforce AbstractQueuedLongSynchronizerTest_testIsQueued() {
+	
+	String interruptibleThread = "";
+
+	String interruptedThread = "";
+
+	event beforeinterruptedacq before() :
+		call(* AbstractQueuedLongSynchronizer+.acquireInterruptibly(..)) && within(AbstractQueuedLongSynchronizerTest.InterruptedSyncRunnable+) {
+		       if (interruptedThread.equals("")) {
+		       	  interruptedThread = Thread.currentThread().getName();
+		       }
+		}
+
+	event beforeinterruptibleacq before() :
+		call(* AbstractQueuedLongSynchronizer+.acquireInterruptibly(..)) && within(AbstractQueuedLongSynchronizerTest.InterruptibleSyncRunnable+) {
+		       if (interruptibleThread.equals("")) {
+		       	  interruptibleThread = Thread.currentThread().getName();
+		       }
+		}
+
+	event afterinterruptiblefinish after() :
+		execution(* Runnable+.run(..)) && threadName(interruptibleThread){
+		}
+
+	event afterinterruptedfinish after() :
+		execution(* Runnable+.run(..)) && threadName(interruptedThread){
+		}
+	
+	event checkone before() :
+	      call (* AbstractQueuedLongSynchronizer+.isQueued(..))  && countCond(count == 3) && threadBlocked(interruptedThread) {
+	      }
+
+	event checktwo before() :
+	      call (* AbstractQueuedLongSynchronizer+.isQueued(..))  && countCond(count == 5 || count == 4) && threadBlocked(interruptibleThread) {
+	      }
+
+	event check before():
+	      call (* AbstractQueuedLongSynchronizer+.isQueued(..)) && countCond(count > 5 || count <= 2){
+	      }
+
+ 
+		
+	ere : check check beforeinterruptedacq checkone beforeinterruptibleacq checktwo checktwo afterinterruptedfinish check check afterinterruptiblefinish check check
+
+	@nonfail {
+		System.out.println("validate.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

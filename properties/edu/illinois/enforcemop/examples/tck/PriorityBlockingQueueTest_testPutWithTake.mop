@@ -1,0 +1,25 @@
+import java.util.*;
+import java.util.concurrent.*;
+
+enforce PriorityBlockingQueueTest_testPutWithTake(PriorityBlockingQueue p) {
+	
+	event beforecheck before(PriorityBlockingQueue p) :
+		call(* PriorityBlockingQueue+.size(..)) && target(p){
+		}
+
+	event afterput after(PriorityBlockingQueue p) :
+		call(* PriorityBlockingQueue+.put(..))  && target(p) {
+		}
+
+
+	ere : afterput afterput afterput afterput beforecheck
+
+	@nonfail {
+		System.out.println("nonfail.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

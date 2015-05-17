@@ -1,0 +1,35 @@
+package edu.illinois.enforcemop.examples.tck;
+
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.locks.LockSupport;
+import edu.illinois.enforcemop.examples.tck.*;
+
+enforce LockSupportTest_testParkAfterUnpark() {
+	
+	event afterunpark after():
+	      call (* LockSupport+.unpark(..)){
+              System.out.println(Thread.currentThread().getName());
+	      }
+
+	event afterpark after():
+	      call (* LockSupport+.park(..)){
+              System.out.println(Thread.currentThread().getName());
+	      }
+
+	event beforepark before():
+	      call (* LockSupport+.park(..)){
+              System.out.println(Thread.currentThread().getName());
+	      }
+		
+	ere : afterunpark beforepark afterpark
+
+	@nonfail {
+		System.out.println("validate.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

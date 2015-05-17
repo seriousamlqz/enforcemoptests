@@ -1,0 +1,37 @@
+import java.util.*;
+import java.util.concurrent.*;
+
+import org.sysunit.mesh.CommandGroup;
+import edu.illinois.enforcemop.examples.sysunit.*;
+
+enforce CommandGroupTest_testInFlight() {
+	
+	String commandThread = "";
+	event beforecheckin before() :
+		call(* CommandGroupTest+.assertTouched(..)) {
+		}
+
+	event beforechecknotin before() :
+		call(* CommandGroupTest+.assertNotTouched(..)) {
+		}
+
+
+	event aftertouch after() :
+		call(* CommandGroupTest+.touch(..)) {
+		}
+
+	event beforewait before() :
+		call(* CommandGroup+.waitFor(..)) {
+		}
+
+	ere : beforewait (beforechecknotin)+ aftertouch beforecheckin
+
+	@nonfail {
+		System.out.println("nonfail.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

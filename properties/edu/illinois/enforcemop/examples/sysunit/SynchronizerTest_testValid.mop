@@ -1,0 +1,33 @@
+import java.util.*;
+import java.util.concurrent.*;
+
+import org.junit.Test;
+import org.sysunit.util.UtilTestBase;
+import org.sysunit.sync.Synchronizer;
+import edu.illinois.enforcemop.examples.sysunit.*;
+
+enforce SynchronizerTest_testValid() {
+	
+	String blockThread = "";
+	boolean first = true;
+
+	event beforecheck before() :
+		call(* SynchronizerTest+.assertTouches(..)) && threadBlocked(blockThread) && condition(first){
+		first = false;
+		}
+	event beforesync before() :
+		call(* Synchronizer+.sync(..)){
+		       blockThread = Thread.currentThread().getName();
+		}
+
+	ere : beforesync beforecheck (~ empty)*
+
+	@nonfail {
+		System.out.println("nonfail");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

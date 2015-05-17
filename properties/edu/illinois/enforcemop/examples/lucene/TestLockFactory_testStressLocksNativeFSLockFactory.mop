@@ -1,0 +1,27 @@
+import java.util.*;
+import java.util.concurrent.*;
+import org.junit.Assert;
+
+enforce TestLockFactory_testStressLocksNativeFSLockFactory() {
+	
+	String putThread = "";
+	
+	event beforecheck before() :
+		call(* Assert+.assertTrue(..)){
+		}
+
+	event afterfinish after() :
+		execution(* Runnable+.run(..)) && condition(!Thread.currentThread().getName().equals("main")) {
+		}
+
+	ere : afterfinish afterfinish beforecheck+
+
+	@nonfail {
+		System.out.println("validate.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

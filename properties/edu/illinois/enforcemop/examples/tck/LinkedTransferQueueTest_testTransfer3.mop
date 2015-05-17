@@ -1,0 +1,32 @@
+import java.util.*;
+import java.util.concurrent.*;
+
+enforce LinkedTransferQueueTest_testTransfer3(LinkedTransferQueue q) {
+	
+	String takeThread = "";
+	boolean firstCheck = true;
+
+	event beforefirsttransfer before(LinkedTransferQueue q) :
+		call(* LinkedTransferQueue+.transfer(..)) && threadName("firstThread") && target(q) {
+		}
+
+	event beforesecondtransfer before(LinkedTransferQueue q) :
+		call(* LinkedTransferQueue+.transfer(..)) && target(q)  && threadName("interruptThread")  && threadBlocked("firstThread") {
+		}
+
+	event beforecheck before(LinkedTransferQueue q) :
+		call(* LinkedTransferQueue+.size(..)) && condition(!Thread.currentThread().getName().equals("firstThread") && firstCheck) && target(q)  && threadBlocked("interruptThread") {  
+		firstCheck = false;
+		}
+
+	ere : beforefirsttransfer beforesecondtransfer beforecheck
+
+	@nonfail {
+		System.out.println("nonfail.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

@@ -1,0 +1,38 @@
+import java.util.*;
+import java.util.concurrent.*;
+
+import junit.framework.Assert;
+import org.apache.commons.collections.Buffer;
+import org.apache.commons.collections.buffer.BlockingBuffer;
+
+enforce TestBlockingBuffer_testInterruptedGet() {
+
+	String blockThread = "";
+	event beforeinterrupt before() :
+		call(* Thread+.interrupt(..)) && threadBlocked(blockThread) {
+		}
+
+	event beforeget before() :
+		call(* Buffer+.get(..)) {
+		       blockThread = Thread.currentThread().getName();
+		}
+
+ 	event afterfinish after() :
+	      execution (* Runnable+.run(..)) && threadName(blockThread) {
+	      }	
+
+	event beforecheck before() :
+	      call (* Collection+.contains(..)) {
+	      }	
+
+	ere :  beforeget beforeinterrupt afterfinish beforecheck
+
+	@nonfail {
+		System.out.println("nonfail.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

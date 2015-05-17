@@ -1,0 +1,45 @@
+package edu.illinois.enforcemop.examples.tck;
+
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.locks.Condition;
+import edu.illinois.enforcemop.examples.tck.*;
+import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.*;
+
+enforce ReentrantReadWriteLockTest_testGetWaitQueueLength() {
+	
+	String waitThread = "";
+
+
+	event beforelock before():
+	      call (* Lock+.lock(..)) && threadBlocked(waitThread) && threadName("main") && countCond(count <= 2){
+	      }
+
+
+	event beforesecondlock before():
+	      call (* Lock+.lock(..)) && threadName("main") && countCond(count > 2){
+	      }
+
+	event beforeawait before():
+	      call (* Condition+.await(..)){
+	      	   waitThread = Thread.currentThread().getName();
+	      }
+
+	event afterrun after():
+	      execution (* Runnable+.run(..)) && threadName(waitThread){
+	      }
+
+ 
+		
+	ere : beforeawait beforelock afterrun beforesecondlock
+
+	@nonfail {
+		System.out.println("validate.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

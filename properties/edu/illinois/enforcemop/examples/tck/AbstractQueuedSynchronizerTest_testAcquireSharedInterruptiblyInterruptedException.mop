@@ -1,0 +1,32 @@
+package edu.illinois.enforcemop.examples.tck;
+
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.locks.AbstractQueuedSynchronizer.ConditionObject;
+import edu.illinois.enforcemop.examples.tck.*;
+import edu.illinois.enforcemop.examples.tck.AbstractQueuedSynchronizerTest.BooleanLatch;
+
+enforce AbstractQueuedSynchronizerTest_testAcquireSharedInterruptiblyInterruptedException(BooleanLatch l) {
+	
+	String awaitThread = "";
+
+	event beforeacquire before(BooleanLatch l):
+	      call (* BooleanLatch+.acquireSharedInterruptibly(..)) && target(l)  {
+	      	   awaitThread = Thread.currentThread().getName();
+	      }
+
+	event beforecheck before(BooleanLatch l):
+	      call (* BooleanLatch+.isSignalled(..))  && threadBlocked(awaitThread) && target(l) && threadName("main"){
+	      }
+		
+	ere : beforeacquire beforecheck
+
+	@nonfail {
+		System.out.println("validate.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

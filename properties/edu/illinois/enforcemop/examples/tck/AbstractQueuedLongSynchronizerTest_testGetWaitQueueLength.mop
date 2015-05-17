@@ -1,0 +1,53 @@
+package edu.illinois.enforcemop.examples.tck;
+
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.locks.AbstractQueuedLongSynchronizer.ConditionObject;
+import edu.illinois.enforcemop.examples.tck.*;
+
+enforce AbstractQueuedLongSynchronizerTest_testGetWaitQueueLength() {
+	
+ 	String awaitThreadOne = "awaitThread1";
+
+	String awaitThreadTwo = "awaitThread2";
+
+	String mainThread = "main";
+
+
+	event beforeacquireone before():
+	      call (* AbstractQueuedLongSynchronizer+.acquire(..)) && threadBlocked(awaitThreadTwo) && threadBlocked(awaitThreadOne) && threadName(mainThread) && countCond(count < 4){
+	      }
+
+	event beforeacquiretwo before():
+	      call (* AbstractQueuedLongSynchronizer+.acquire(..)) && threadName(mainThread) && countCond(count == 4){
+	      }
+
+	event afterruntwo after():
+	      execution (* Runnable+.run(..)) && threadName(awaitThreadTwo){
+	      }
+
+	event afterrunone after():
+	      execution (* Runnable+.run(..)) && threadName(awaitThreadOne){
+	      }
+
+	event beforeawaittwo before():
+	      call (* AbstractQueuedLongSynchronizer+.acquire(..)) && threadName(awaitThreadTwo) && threadBlocked(awaitThreadOne){
+	      }
+
+	event beforeawaitone before():
+	      call (* ConditionObject+.await(..)) && threadName(awaitThreadOne){
+	      }
+
+ 
+		
+	ere : beforeawaitone beforeawaittwo beforeacquireone afterrunone afterruntwo beforeacquiretwo
+
+	@nonfail {
+		System.out.println("validate.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

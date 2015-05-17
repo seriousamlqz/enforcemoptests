@@ -1,0 +1,27 @@
+import java.util.*;
+import java.util.concurrent.*;
+
+enforce SemaphoreTest_testAcquireInterruptedExceptionfair() {
+	
+	String acquireThread = "";
+	
+	event beforeinterrupt before() :
+		call(* Thread+.interrupt(..)) && threadBlocked(acquireThread){
+		}
+
+	event beforeacquire before() :
+		call(* Semaphore+.acquire(..)) {
+		acquireThread = Thread.currentThread().getName();
+		}
+
+	ptltl : beforeinterrupt => <*> beforeacquire	
+
+	@validation {
+		System.out.println("validate.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

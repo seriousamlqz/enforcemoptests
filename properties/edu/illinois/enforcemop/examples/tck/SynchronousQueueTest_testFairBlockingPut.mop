@@ -1,0 +1,27 @@
+import java.util.*;
+import java.util.concurrent.*;
+
+enforce SynchronousQueueTest_testFairBlockingPut() {
+	
+	String putThread = "";
+	
+	event beforeinterrupt before() :
+		call(* Thread+.interrupt(..)) && threadBlocked(putThread){
+		}
+
+	event beforeput before() :
+		call(* SynchronousQueue+.put(..)) {
+		putThread = Thread.currentThread().getName();
+		}
+
+	ptltl : beforeinterrupt => <*> beforeput	
+
+	@validation {
+		System.out.println("validate.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

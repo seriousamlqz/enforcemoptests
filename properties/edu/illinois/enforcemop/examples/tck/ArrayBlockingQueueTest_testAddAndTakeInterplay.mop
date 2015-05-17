@@ -1,0 +1,34 @@
+import java.util.*;
+import java.util.concurrent.*;
+
+enforce ArrayBlockingQueueTest_testAddAndTakeInterplay() {
+	
+	String takeThread = "";
+
+	event afteradd after() :
+		call(* ArrayBlockingQueue+.add(..)) && countCond(count == 1) {
+		}
+
+	event beforeadd before() :
+		call(* ArrayBlockingQueue+.add(..)) && countCond(count == 2) && threadBlocked(takeThread){
+		}
+
+	event beforetake before() :
+		call(* ArrayBlockingQueue+.take(..)) {
+                if (takeThread.equals("")) {
+                   takeThread = Thread.currentThread().getName();
+                }
+		}
+
+
+	ere : afteradd beforetake beforetake beforeadd
+
+	@nonfail {
+		System.out.println("nonfail.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

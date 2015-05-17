@@ -1,0 +1,31 @@
+import java.util.*;
+import java.util.concurrent.*;
+
+enforce ArrayBlockingQueueTest_testTakeFromEmpty() {
+	
+	String takeThread = "";
+	
+	event beforeinterrupt before() :
+		call(* Thread+.interrupt(..)) && threadBlocked(takeThread){
+		}
+
+
+	event beforetake before() :
+		call(* ArrayBlockingQueue+.take(..)) {
+		       if (takeThread.equals("")) {
+		       	  takeThread = Thread.currentThread().getName();
+		       }
+		}
+
+
+	ptltl : beforeinterrupt => <*> beforetake
+
+	@validation {
+		System.out.println("validate.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

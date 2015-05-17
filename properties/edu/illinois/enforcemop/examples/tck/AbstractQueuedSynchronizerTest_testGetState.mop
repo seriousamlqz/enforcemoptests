@@ -1,0 +1,37 @@
+package edu.illinois.enforcemop.examples.tck;
+
+import java.util.*;
+import java.util.concurrent.*;
+import edu.illinois.enforcemop.examples.tck.*;
+
+enforce AbstractQueuedSynchronizerTest_testGetState(AbstractQueuedSynchronizer q) {
+	
+	event beforecheck before(AbstractQueuedSynchronizer q):
+	      call (* AbstractQueuedSynchronizer+.isHeldExclusively(..)) && target(q)  && countCond(count == 3) {
+	      }
+
+	event aftercheck after(AbstractQueuedSynchronizer q) :
+	      call (* AbstractQueuedSynchronizer+.isHeldExclusively(..)) && target(q)   && countCond(count == 3) {
+	      }
+
+	event beforerelease before(AbstractQueuedSynchronizer q):
+	      call (* AbstractQueuedSynchronizer+.release(..)) && target(q)    && countCond(count == 2) {
+	      }
+
+	event afteracq after(AbstractQueuedSynchronizer q):
+	      call (* AbstractQueuedSynchronizer+.acquire(..)) && target(q)   && countCond(count == 2) {
+	      }
+
+ 
+		
+	ere : afteracq beforecheck aftercheck beforerelease
+
+	@nonfail {
+		System.out.println("validate.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

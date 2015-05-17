@@ -1,0 +1,31 @@
+package edu.illinois.enforcemop.examples.tck;
+
+import java.util.*;
+import java.util.concurrent.*;
+import edu.illinois.enforcemop.examples.tck.*;
+
+enforce CountDownLatchTest_testAwait(CountDownLatch l) {
+	
+	String awaitThread = "";
+
+
+	event beforecountdown before(CountDownLatch l):
+	      call (* CountDownLatch+.countDown(..)) && threadBlocked(awaitThread) && countCond(count == 1)  && target(l){
+	      }
+
+	event beforeawait before(CountDownLatch l):
+	      call (* CountDownLatch+.await(..))  && target(l){
+	      	   awaitThread = Thread.currentThread().getName();
+	      }
+		
+	ere : beforeawait beforecountdown
+
+	@nonfail {
+		System.out.println("validate.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

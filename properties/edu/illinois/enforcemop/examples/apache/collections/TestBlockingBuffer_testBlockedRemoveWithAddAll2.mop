@@ -1,0 +1,47 @@
+import java.util.*;
+import java.util.concurrent.*;
+
+import org.apache.commons.collections.Buffer;
+import org.apache.commons.collections.buffer.BlockingBuffer;
+
+enforce TestBlockingBuffer_testBlockedRemoveWithAddAll2() {
+
+
+	String blockThreadOne = "";
+
+	String blockThreadTwo = "";
+
+	event beforeaddall before() :
+		call(* Buffer+.addAll(..)) && threadBlocked(blockThreadTwo)  && threadBlocked(blockThreadOne) {
+		}
+
+	event beforeremove before() :
+		call(* Buffer+.remove()) {
+		       String threadname = Thread.currentThread().getName();
+		       if (blockThreadOne.equals("")) {
+		       	 blockThreadOne = threadname;
+		       } else if (blockThreadTwo.equals("")) { 
+		       	 blockThreadTwo = threadname;
+		       } 
+		}
+
+	event afterremove after() :
+		call(* Buffer+.remove()) {
+		}
+
+	event beforecheck before() :
+		call(* Set+.size(..)) {
+
+		}
+
+	ere : beforeremove beforeremove beforeaddall afterremove afterremove beforecheck
+
+	@nonfail {
+		System.out.println("nonfail.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

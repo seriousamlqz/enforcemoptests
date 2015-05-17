@@ -1,0 +1,29 @@
+import java.util.*;
+import java.util.concurrent.*;
+
+import org.junit.Test;
+import org.sysunit.util.Barrier;
+import org.sysunit.util.UtilTestBase;
+import edu.illinois.enforcemop.examples.sysunit.*;
+
+enforce BarrierTest_testOneThread() {
+	
+	
+	event beforecheck before() :
+		call(* BarrierTest+.assertTouches(..)) {
+		}
+	event aftertouch before() :
+		call(* BarrierTest+.touch(..)) {
+		}
+
+	ptltl : beforecheck => <*> aftertouch	
+
+	@validation {
+		System.out.println("validate.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

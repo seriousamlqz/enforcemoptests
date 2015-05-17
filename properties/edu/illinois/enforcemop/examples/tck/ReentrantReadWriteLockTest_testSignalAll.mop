@@ -1,0 +1,39 @@
+package edu.illinois.enforcemop.examples.tck;
+
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.locks.Condition;
+import edu.illinois.enforcemop.examples.tck.*;
+import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.*;
+
+enforce ReentrantReadWriteLockTest_testSignalAll() {
+	
+	String awaitThreadOne = "";
+
+	String awaitThreadTwo = "";
+
+
+	event beforelock before():
+	      call (* Lock+.lock(..)) && threadBlocked(awaitThreadTwo) && threadBlocked(awaitThreadOne) && threadName("main"){
+	      }
+
+	event beforeawait before():
+	      call (* Condition+.await(..)){
+	      	   if (awaitThreadOne.equals(""))
+	      	      awaitThreadOne = Thread.currentThread().getName();
+		   else if (awaitThreadTwo.equals(""))
+		      awaitThreadTwo = Thread.currentThread().getName();
+	      }
+		
+	ere : beforeawait beforeawait beforelock
+
+	@nonfail {
+		System.out.println("validate.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

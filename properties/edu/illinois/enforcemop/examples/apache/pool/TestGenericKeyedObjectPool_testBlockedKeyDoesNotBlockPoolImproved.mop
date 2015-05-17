@@ -1,0 +1,33 @@
+package edu.illinois.enforcemop.examples.apache.pool;
+import java.util.*;
+import java.util.concurrent.*;
+import static org.junit.Assert.*;
+import org.junit.Assert;
+import org.apache.commons.pool.*;
+import org.apache.commons.pool.impl.*;
+
+enforce TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved() {
+
+	String borrowThread = "borrowThread";
+
+	blocking event beforeborrow before() :
+		call(* KeyedObjectPool+.borrowObject(..)) && threadName(borrowThread){
+                System.out.println("beforeborrow");
+		}
+
+	event beforemainborrow before() :
+		call(* KeyedObjectPool+.borrowObject(..)) && countCond(count > 1) && threadName("main") {
+                System.out.println("beforemainborrow");
+		}
+
+	ere : beforeborrow beforemainborrow
+
+	@nonfail {
+		System.out.println("validate.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

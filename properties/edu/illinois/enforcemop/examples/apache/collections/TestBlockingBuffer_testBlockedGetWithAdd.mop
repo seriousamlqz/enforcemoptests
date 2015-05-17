@@ -1,0 +1,28 @@
+import java.util.*;
+import java.util.concurrent.*;
+
+import org.apache.commons.collections.Buffer;
+import org.apache.commons.collections.buffer.BlockingBuffer;
+
+enforce TestBlockingBuffer_testBlockedGetWithAdd(BlockingBuffer b) {
+
+	event beforeadd before(BlockingBuffer b) :
+		call(* Buffer+.add(..)) && target(b) && threadName("main") && threadBlocked("readThread1")  && threadBlocked("readThread2") {
+		}
+
+	event beforeget before(BlockingBuffer b) :
+		call(* Buffer+.get(..)) && target(b) {
+
+		}
+
+	ptltl : beforeadd =>  <*> beforeget
+
+	@validation {
+		System.out.println("validate.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

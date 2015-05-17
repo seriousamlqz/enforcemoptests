@@ -1,0 +1,47 @@
+package edu.illinois.enforcemop.examples.tck;
+
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.locks.Condition;
+import edu.illinois.enforcemop.examples.tck.*;
+import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.*;
+
+enforce ReentrantReadWriteLockTest_testReadHoldingWriteLockFair3() {
+	
+	String readThreadOne = "";
+	
+	String readThreadTwo = "";
+	
+	boolean firstLock = false;
+
+	event beforelock before():
+	      call (* Lock+.lock(..)) && target(WriteLock) && condition(!Thread.currentThread().getName().equals("main")){
+	      	   if (readThreadOne.equals(""))
+		      readThreadOne = Thread.currentThread().getName();
+		   else if (readThreadTwo.equals(""))
+		      readThreadTwo = Thread.currentThread().getName();
+	      }
+
+	event beforemainlock before():
+	      call (* Lock+.lock(..)) && condition(firstLock) && target(ReadLock) && threadBlocked(readThreadOne) && threadBlocked(readThreadTwo) && threadName("main"){
+	      }
+
+	event afterfirstlock after():
+	      call (* Lock+.lock(..)) && condition(!firstLock) && target(ReadLock) && threadName("main"){
+	      	   firstLock = true;
+	      }
+
+		
+	ere : afterfirstlock beforelock beforelock beforemainlock
+
+	@nonfail {
+		System.out.println("validate.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

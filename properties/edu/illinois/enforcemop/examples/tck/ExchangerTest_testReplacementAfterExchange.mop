@@ -1,0 +1,40 @@
+package edu.illinois.enforcemop.examples.tck;
+
+import java.util.*;
+import java.util.concurrent.*;
+import edu.illinois.enforcemop.examples.tck.*;
+
+enforce ExchangerTest_testReplacementAfterExchange() {
+	
+	event beforeexchange before():
+	      call (* Exchanger+.exchange(..)) && threadName("t1");{
+	      }
+
+	event beforeexchangetwo before():
+	      call (* Exchanger+.exchange(..)) && threadName("t2");{
+	      }
+
+	event beforeexchangethree before():
+	      call (* Exchanger+.exchange(..)) && threadName("t3");{
+	      }
+
+	event beforeinterrupt before():
+	      call (* Thread+.interrupt(..)) && threadBlocked("t1"){
+	      }
+
+	event afterfinish after():
+	      execution (* Runnable+.run(..)) && threadName("t1"){
+	      }
+
+		
+	ere : beforeexchange beforeexchangetwo beforeexchange beforeinterrupt afterfinish beforeexchangetwo beforeexchangethree
+
+	@nonfail {
+		System.out.println("validate.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

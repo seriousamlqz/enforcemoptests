@@ -1,0 +1,34 @@
+import java.util.*;
+import java.util.concurrent.*;
+
+enforce SynchronousQueueTest_testFairPutWithTake() {
+	
+	String putThread = "";
+	
+	event beforeinterrupt before() :
+		call(* Thread+.interrupt(..)) && threadBlocked(putThread){
+		}
+
+	event beforetake before() :
+		call(* SynchronousQueue+.take(..)) && threadBlocked(putThread){
+		}
+
+	event beforeput before() :
+		call(* SynchronousQueue+.put(..)) {
+		       if (putThread.equals("")) {
+		       	  putThread = Thread.currentThread().getName();
+		       }
+		}
+
+
+	ere : beforeput+ beforetake beforeput+ beforeinterrupt
+
+	@nonfail {
+		System.out.println("nonfail.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

@@ -1,0 +1,27 @@
+import java.util.*;
+import java.util.concurrent.*;
+
+enforce SemaphoreTest_testAcquireReleaseInDifferentThreads(Semaphore s) {
+	
+	String acquireThread = "";
+	
+	event beforerelease before(Semaphore s) :
+		call(* Semaphore+.release(..)) && threadBlocked(acquireThread) && countCond(count == 1) && target(s){
+		}
+
+	event beforeacquire before(Semaphore s) :
+		call(* Semaphore+.acquire(..)) && countCond(count == 1) && target(s){
+		acquireThread = Thread.currentThread().getName();
+		}
+
+	ptltl : beforerelease => <*> beforeacquire	
+
+	@validation {
+		System.out.println("validate.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

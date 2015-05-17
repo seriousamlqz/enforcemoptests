@@ -1,0 +1,32 @@
+package edu.illinois.enforcemop.examples.tck;
+
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.locks.LockSupport;
+import edu.illinois.enforcemop.examples.tck.*;
+
+enforce PhaserTest_testAwaitAdvance3() {
+	
+	String awaitThread = "";
+
+	event beforearrive before():
+	      call (* Phaser+.arrive(..)) && countCond(count == 1){
+                   awaitThread = Thread.currentThread().getName();
+	      }
+
+	event beforeinterrupt before():
+	      call (* Thread+.interrupt(..)) && threadBlocked(awaitThread){
+
+	      }
+		
+	ere : beforearrive beforeinterrupt
+
+	@nonfail {
+		System.out.println("validate.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

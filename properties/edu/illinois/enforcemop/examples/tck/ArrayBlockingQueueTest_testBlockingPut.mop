@@ -1,0 +1,30 @@
+import java.util.*;
+import java.util.concurrent.*;
+
+enforce ArrayBlockingQueueTest_testBlockingPut() {
+	
+	String putThread = "";
+	
+	event beforeinterrupt before() :
+		call(* Thread+.interrupt(..)) && threadBlocked(putThread){
+                   		}
+
+	event beforeput before() :
+		call(* ArrayBlockingQueue+.put(..)){
+		       if (putThread.equals("")) {
+		       	  putThread = Thread.currentThread().getName();
+		       }
+                }
+
+
+	ere : beforeput+ beforeinterrupt
+
+	@nonfail {
+		System.out.println("nonfail.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

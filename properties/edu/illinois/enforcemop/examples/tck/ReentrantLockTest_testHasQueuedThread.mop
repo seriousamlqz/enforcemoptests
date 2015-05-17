@@ -1,0 +1,60 @@
+package edu.illinois.enforcemop.examples.tck;
+
+import java.util.*;
+import java.util.concurrent.*;
+import edu.illinois.enforcemop.examples.tck.*;
+import java.util.concurrent.locks.ReentrantLock.*;
+
+enforce ReentrantLockTest_testHasQueuedThread() {
+	
+	String interruptibleThread = "";
+
+	String interruptedThread = "";
+
+	event beforeinterruptedacq before() :
+		call(* ReentrantLock+.lockInterruptibly(..)) && within(ReentrantLockTest.InterruptedLockRunnable+) {
+		       if (interruptedThread.equals("")) {
+		       	  interruptedThread = Thread.currentThread().getName();
+		       }
+		}
+
+	event beforeinterruptibleacq before() :
+		call(* ReentrantLock+.lockInterruptibly(..)) && within(ReentrantLockTest.InterruptibleLockRunnable+) {
+		       if (interruptibleThread.equals("")) {
+		       	  interruptibleThread = Thread.currentThread().getName();
+		       }
+		}
+
+	event afterinterruptiblefinish after() :
+		execution(* Runnable+.run(..)) && threadName(interruptibleThread){
+		}
+
+	event afterinterruptedfinish after() :
+		execution(* Runnable+.run(..)) && threadName(interruptedThread){
+		}
+	
+	event checkone before() :
+	      call (* ReentrantLock+.hasQueuedThread(..))  && countCond(count == 3) && threadBlocked(interruptedThread) {
+	      }
+
+	event checktwo before() :
+	      call (* ReentrantLock+.hasQueuedThread(..))  && countCond(count == 4 || count == 5) && threadBlocked(interruptibleThread) {
+	      }
+
+	event check before():
+	      call (* ReentrantLock+.hasQueuedThread(..)) && countCond(count >= 6 || count <= 2){
+	      }
+
+ 
+		
+	ere : check check beforeinterruptedacq checkone beforeinterruptibleacq checktwo checktwo afterinterruptedfinish check check afterinterruptiblefinish check check
+
+	@nonfail {
+		System.out.println("validate.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

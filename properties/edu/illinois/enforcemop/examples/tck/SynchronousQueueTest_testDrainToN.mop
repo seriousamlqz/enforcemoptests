@@ -1,0 +1,35 @@
+import java.util.*;
+import java.util.concurrent.*;
+
+enforce SynchronousQueueTest_testDrainToN() {
+	
+	String putThreadOne = "";
+
+	String putThreadTwo = "";
+	
+	event beforedrain before(SynchronousQueue q) :
+		call(* SynchronousQueue+.drainTo(..)) && threadBlocked(putThreadOne) && threadBlocked(putThreadTwo) && target(q) && countCond(count == 1){
+		}
+
+
+	event beforeput before(SynchronousQueue q) :
+		call(* SynchronousQueue+.put(..)) && target(q){
+		       if (putThreadOne.equals("")) {
+		       	  putThreadOne = Thread.currentThread().getName();
+		       } else if (putThreadTwo.equals("")) {
+		       	  putThreadTwo = Thread.currentThread().getName();
+                       }
+		}
+
+
+	ere : beforeput beforeput beforedrain
+
+	@nonfail {
+		System.out.println("validate.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

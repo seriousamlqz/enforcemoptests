@@ -1,0 +1,34 @@
+import java.util.*;
+import java.util.concurrent.*;
+
+import org.junit.Test;
+import org.sysunit.util.UtilTestBase;
+import org.sysunit.util.ThreadPool;
+import edu.illinois.enforcemop.examples.sysunit.*;
+
+enforce ThreadPoolTest_testMultipleTasks() {
+	
+	event beforecheck before() :
+		call(* ThreadPool+.stop(..)){
+		}
+
+	event aftertouch after() :
+		call(* ThreadPoolTest+.touch(..)){
+		}
+
+	event beforetouch before() :
+		call(* ThreadPoolTest+.touch(..)){
+		}
+
+
+	ere : beforetouch beforetouch aftertouch aftertouch beforecheck
+
+	@nonfail {
+		System.out.println("nonfail");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

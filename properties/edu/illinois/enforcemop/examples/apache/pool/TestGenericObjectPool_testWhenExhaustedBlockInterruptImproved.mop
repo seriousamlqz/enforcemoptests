@@ -1,0 +1,40 @@
+package edu.illinois.enforcemop.examples.apache.pool;
+import java.util.*;
+import java.util.concurrent.*;
+import static org.junit.Assert.*;
+import org.junit.Assert;
+import org.apache.commons.pool.*;
+import org.apache.commons.pool.impl.*;
+
+enforce TestGenericObjectPool_testWhenExhaustedBlockInterruptImproved() {
+
+	String borrowThread = "";
+
+	event beforeborrow before() :
+		call(* ObjectPool+.borrowObject(..)) {
+		       borrowThread = Thread.currentThread().getName();
+		}
+
+	event beforeinterrupt before() :
+		call(* Thread+.interrupt(..)) && threadBlocked(borrowThread) {
+		}
+
+	event afterfinish after() :
+		execution(* Runnable+.run(..)) && threadName(borrowThread) {
+		}
+
+	event beforereturn before() :
+		call(* ObjectPool+.returnObject(..)) {
+		}
+
+	ere : beforeborrow beforeborrow beforeinterrupt afterfinish beforereturn beforeborrow beforereturn
+
+	@nonfail {
+		System.out.println("validate.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

@@ -1,0 +1,31 @@
+import java.util.*;
+import java.util.concurrent.*;
+
+enforce LinkedTransferQueueTest_testTransfer5(LinkedTransferQueue q) {
+	
+	String takeThread = "";
+	
+	event beforetake before(LinkedTransferQueue q) :
+		call(* LinkedTransferQueue+.take(..)) && target(q) && threadBlocked(takeThread){
+		}
+
+
+	event beforetransfer before(LinkedTransferQueue q) :
+		call(* LinkedTransferQueue+.transfer(..))  && target(q) {
+		       if (takeThread.equals("")) {
+		       	  takeThread = Thread.currentThread().getName();
+		       }
+		}
+
+
+	ptltl : beforetake => <*> beforetransfer
+
+	@validation {
+		System.out.println("validate.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

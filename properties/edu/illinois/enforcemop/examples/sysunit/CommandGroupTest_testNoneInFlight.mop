@@ -1,0 +1,27 @@
+import java.util.*;
+import java.util.concurrent.*;
+
+import org.sysunit.mesh.CommandGroup;
+import edu.illinois.enforcemop.examples.sysunit.*;
+
+enforce CommandGroupTest_testNoneInFlight() {
+	
+	
+	event beforecheck before() :
+		call(* CommandGroupTest+.assertTouched(..)) {
+		}
+	event aftertouch after() :
+		call(* CommandGroupTest+.touch(..)) {
+		}
+
+	ptltl : beforecheck => <*> aftertouch	
+
+	@validation {
+		System.out.println("validate.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

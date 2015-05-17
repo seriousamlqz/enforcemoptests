@@ -1,0 +1,52 @@
+import java.util.*;
+import java.util.concurrent.*;
+
+import org.sysunit.util.TaskQueue;
+import edu.illinois.enforcemop.examples.sysunit.*;
+import junit.framework.Assert;
+
+enforce TaskQueueTest_testInterrupt() {
+	
+	
+	String blockThread = "";
+	int count = 0;
+
+	event beforeget before() :
+		call(* TaskQueueTest+.getTask(..)) && threadBlocked(blockThread) && condition(count == 0){
+		}
+
+	event afterget after() :
+		call(* TaskQueueTest+.getTask(..)) && threadBlocked(blockThread) && condition(count == 0){
+		++count;
+		}
+
+	event beforesecondget before() :
+		call(* TaskQueueTest+.getTask(..)) && condition(count == 1){
+		}
+
+	event beforenext before() :
+		call(* TaskQueue+.nextTask(..)) {
+		       blockThread = Thread.currentThread().getName();
+		}
+
+	event afterfinish after() :
+		execution(* Runnable+.run(..)) && threadName(blockThread){
+		}
+
+	event afteradd after() :
+		call(* TaskQueue+.addTask(..)) {
+		}
+
+
+		
+	ere : beforenext beforeget afterget afterfinish afteradd beforesecondget
+
+	@nonfail {
+		System.out.println("nonfail.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

@@ -1,0 +1,42 @@
+package edu.illinois.enforcemop.examples.tck;
+
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.locks.Condition;
+import edu.illinois.enforcemop.examples.tck.*;
+import java.util.concurrent.locks.ReentrantLock.*;
+
+enforce ReentrantLockTest_testIsLocked() {
+	
+	String interruptibleThread = "";
+
+
+	event afterlock after():
+	      call (* Lock+.lock(..)) && countCond(count == 2){
+	      }
+
+	event beforeunlock before():
+	      call (* Lock+.unlock(..)) && countCond(count == 2){
+	      }
+
+	event beforeislocked before():
+	      call (* Lock+.isLocked(..)) && countCond(count == 3){
+	      }
+
+	event afterislocked after():
+	      call (* Lock+.isLocked(..)) && countCond(count == 3){
+	      }
+
+ 
+		
+	ere : afterlock beforeislocked afterislocked beforeunlock
+
+	@nonfail {
+		System.out.println("validate.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

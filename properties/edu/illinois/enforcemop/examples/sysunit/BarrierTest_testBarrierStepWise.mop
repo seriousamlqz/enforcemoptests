@@ -1,0 +1,41 @@
+import java.util.*;
+import java.util.concurrent.*;
+
+import org.junit.Test;
+import org.sysunit.util.Barrier;
+import org.sysunit.util.UtilTestBase;
+import edu.illinois.enforcemop.examples.sysunit.*;
+
+enforce BarrierTest_testBarrierStepWise() {
+	
+	String threadname = "";
+        int count = 0;
+	event beforecheck before() :
+		call(* BarrierTest+.assertTouches(..)) && threadBlocked(threadname) && condition(count < 4) {
+		       threadname = "";
+		       ++count;
+		}
+
+	event beforefinalcheck before() :
+		call(* BarrierTest+.assertTouches(..)) && condition(count == 4) {
+		}
+
+	event beforeblock before() :
+		call(* Barrier+.block(..)){
+		       threadname = Thread.currentThread().getName();
+		}
+
+	event aftertouch after() :
+		call(* BarrierTest+.touch(..)) { }
+
+	ere : beforeblock beforecheck beforeblock beforecheck beforeblock beforecheck beforeblock beforecheck beforeblock aftertouch aftertouch aftertouch aftertouch aftertouch beforefinalcheck				
+
+	@nonfail {
+		System.out.println("non fail.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

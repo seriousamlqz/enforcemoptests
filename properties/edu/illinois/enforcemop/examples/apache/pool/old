@@ -1,0 +1,521 @@
+package edu.illinois.enforcemop.examples.apache.pool;
+import java.util.*;
+import java.util.concurrent.*;
+import static org.junit.Assert.*;
+import org.junit.Assert;
+import org.apache.commons.pool.*;
+import org.apache.commons.pool.impl.*;
+import java.util.concurrent.locks.*;
+import javamoprt.*;
+import java.lang.ref.*;
+import org.aspectj.lang.*;
+
+class TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedEnforcementMonitor_Set extends javamoprt.MOPSet {
+	protected TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedEnforcementMonitor[] elementData;
+
+	public TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedEnforcementMonitor_Set(){
+		this.size = 0;
+		this.elementData = new TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedEnforcementMonitor[4];
+	}
+
+	public final int size(){
+		while(size > 0 && elementData[size-1].MOP_terminated) {
+			elementData[--size] = null;
+		}
+		return size;
+	}
+
+	public final boolean add(MOPMonitor e){
+		ensureCapacity();
+		elementData[size++] = (TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedEnforcementMonitor)e;
+		return true;
+	}
+
+	public final void endObject(int idnum){
+		int numAlive = 0;
+		for(int i = 0; i < size; i++){
+			TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedEnforcementMonitor monitor = elementData[i];
+			if(!monitor.MOP_terminated){
+				monitor.endObject(idnum);
+			}
+			if(!monitor.MOP_terminated){
+				elementData[numAlive++] = monitor;
+			}
+		}
+		for(int i = numAlive; i < size; i++){
+			elementData[i] = null;
+		}
+		size = numAlive;
+	}
+
+	public final boolean alive(){
+		for(int i = 0; i < size; i++){
+			MOPMonitor monitor = elementData[i];
+			if(!monitor.MOP_terminated){
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public final void endObjectAndClean(int idnum){
+		int size = this.size;
+		this.size = 0;
+		for(int i = size - 1; i >= 0; i--){
+			MOPMonitor monitor = elementData[i];
+			if(monitor != null && !monitor.MOP_terminated){
+				monitor.endObject(idnum);
+			}
+			elementData[i] = null;
+		}
+		elementData = null;
+	}
+
+	public final void ensureCapacity() {
+		int oldCapacity = elementData.length;
+		if (size + 1 > oldCapacity) {
+			cleanup();
+		}
+		if (size + 1 > oldCapacity) {
+			TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedEnforcementMonitor[] oldData = elementData;
+			int newCapacity = (oldCapacity * 3) / 2 + 1;
+			if (newCapacity < size + 1){
+				newCapacity = size + 1;
+			}
+			elementData = Arrays.copyOf(oldData, newCapacity);
+		}
+	}
+
+	public final void cleanup() {
+		int numAlive = 0 ;
+		for(int i = 0; i < size; i++){
+			TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedEnforcementMonitor monitor = (TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedEnforcementMonitor)elementData[i];
+			if(!monitor.MOP_terminated){
+				elementData[numAlive] = monitor;
+				numAlive++;
+			}
+		}
+		for(int i = numAlive; i < size; i++){
+			elementData[i] = null;
+		}
+		size = numAlive;
+	}
+
+	public final void event_beforeborrow() {
+		int numAlive = 0 ;
+		for(int i = 0; i < this.size; i++){
+			TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedEnforcementMonitor monitor = (TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedEnforcementMonitor)this.elementData[i];
+			if(!monitor.MOP_terminated){
+				elementData[numAlive] = monitor;
+				numAlive++;
+
+				try {
+					boolean cloned_monitor_condition_fail = false;
+					do {
+						TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedEnforcementMonitor clonedMonitor = (TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedEnforcementMonitor)monitor.clone();
+						clonedMonitor.Prop_1_event_beforeborrow();
+						if (clonedMonitor.MOP_conditionFail) {
+							clonedMonitor = null;
+							cloned_monitor_condition_fail = true;
+							break;
+						}
+						if (!clonedMonitor.Prop_1_Category_nonfail) {
+							clonedMonitor = null;
+							TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedMonitorAspect.TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock_cond.await();
+						}
+						else {
+							clonedMonitor = null;
+							break;
+						}
+					} while (true);
+
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				monitor.Prop_1_event_beforeborrow();
+				TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedMonitorAspect.TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock_cond.signalAll();
+				if(monitor.MOP_conditionFail){
+					monitor.MOP_conditionFail = false;
+				} else {
+					if(monitor.Prop_1_Category_nonfail) {
+						monitor.Prop_1_handler_nonfail();
+					}
+				}
+			}
+		}
+		for(int i = numAlive; i < this.size; i++){
+			this.elementData[i] = null;
+		}
+		size = numAlive;
+	}
+
+	public final void event_beforemainborrow() {
+		int numAlive = 0 ;
+		for(int i = 0; i < this.size; i++){
+			TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedEnforcementMonitor monitor = (TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedEnforcementMonitor)this.elementData[i];
+			if(!monitor.MOP_terminated){
+				elementData[numAlive] = monitor;
+				numAlive++;
+
+				try {
+					boolean cloned_monitor_condition_fail = false;
+					do {
+						TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedEnforcementMonitor clonedMonitor = (TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedEnforcementMonitor)monitor.clone();
+						clonedMonitor.Prop_1_event_beforemainborrow();
+						if (clonedMonitor.MOP_conditionFail) {
+							clonedMonitor = null;
+							cloned_monitor_condition_fail = true;
+							break;
+						}
+						if (!clonedMonitor.Prop_1_Category_nonfail) {
+							clonedMonitor = null;
+							TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedMonitorAspect.TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock_cond.await();
+						}
+						else {
+							clonedMonitor = null;
+							break;
+						}
+					} while (true);
+
+					if (!cloned_monitor_condition_fail){
+						while (!TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedMonitorAspect.containsBlockedThread(monitor.borrowThread)) {
+							if (!TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedMonitorAspect.containsThread(monitor.borrowThread)) {
+								TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedMonitorAspect.TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock_cond.await();
+							}
+							TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedMonitorAspect.TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock_cond.await(50L, TimeUnit.MILLISECONDS);
+						}
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				monitor.Prop_1_event_beforemainborrow();
+				TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedMonitorAspect.TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock_cond.signalAll();
+				if(monitor.MOP_conditionFail){
+					monitor.MOP_conditionFail = false;
+				} else {
+					if(monitor.Prop_1_Category_nonfail) {
+						monitor.Prop_1_handler_nonfail();
+					}
+				}
+			}
+		}
+		for(int i = numAlive; i < this.size; i++){
+			this.elementData[i] = null;
+		}
+		size = numAlive;
+	}
+}
+
+class TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedEnforcementMonitor extends javamoprt.MOPMonitor implements Cloneable, javamoprt.MOPObject {
+	public Object clone() {
+		try {
+			TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedEnforcementMonitor ret = (TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedEnforcementMonitor) super.clone();
+			return ret;
+		}
+		catch (CloneNotSupportedException e) {
+			throw new InternalError(e.toString());
+		}
+	}
+	String borrowThread = "borrowThread";
+
+	boolean MOP_conditionFail = false;
+	int Prop_1_state;
+	static final int Prop_1_transition_beforeborrow[] = {2, 3, 3, 3};;
+	static final int Prop_1_transition_beforemainborrow[] = {3, 3, 1, 3};;
+
+	boolean Prop_1_Category_nonfail = false;
+
+	public TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedEnforcementMonitor () {
+		Prop_1_state = 0;
+
+	}
+
+	public final void Prop_1_event_beforeborrow() {
+		if (!(Thread.currentThread().getName().equals(borrowThread)
+		)) {
+			MOP_conditionFail = true;
+			return;
+		}
+		MOP_lastevent = 0;
+
+		Prop_1_state = Prop_1_transition_beforeborrow[Prop_1_state];
+		Prop_1_Category_nonfail = Prop_1_state != 3;
+	}
+
+	public final void Prop_1_event_beforemainborrow() {
+		if (!(Thread.currentThread().getName().equals("main")
+		)) {
+			MOP_conditionFail = true;
+			return;
+		}
+		MOP_lastevent = 1;
+
+		Prop_1_state = Prop_1_transition_beforemainborrow[Prop_1_state];
+		Prop_1_Category_nonfail = Prop_1_state != 3;
+	}
+
+	public final void Prop_1_handler_nonfail (){
+		{
+			System.out.println("validate.");
+		}
+
+	}
+
+	public final void reset() {
+		MOP_lastevent = -1;
+		Prop_1_state = 0;
+		Prop_1_Category_nonfail = false;
+	}
+
+	static public class TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedEnforcementMonitorDeadlockCallback implements javamoprt.MOPCallBack {
+		public void apply() {
+			{
+				System.out.println("Deadlock happened! Please restart!");
+			}
+		}
+	}
+
+	public final void endObject(int idnum){
+		switch(idnum){
+		}
+		switch(MOP_lastevent) {
+			case -1:
+			return;
+			case 0:
+			//beforeborrow
+			return;
+			case 1:
+			//beforemainborrow
+			return;
+		}
+		return;
+	}
+
+}
+
+public aspect TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedMonitorAspect implements javamoprt.MOPObject {
+	javamoprt.map.MOPMapManager TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedMapManager;
+	public TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedMonitorAspect(){
+		Runtime.getRuntime().addShutdownHook(new TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_DummyHookThread());
+		TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedMapManager = new javamoprt.map.MOPMapManager();
+		TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedMapManager.start();
+	}
+
+	// Declarations for the Lock
+	static ReentrantLock TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock = new ReentrantLock();
+	static Condition TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock_cond = TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock.newCondition();
+
+	static boolean TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_activated = false;
+
+	// Declarations for Indexing Trees
+	static TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedEnforcementMonitor TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_Monitor = new TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedEnforcementMonitor();
+
+	// Trees for References
+
+	pointcut MOP_CommonPointCut() : !within(javamoprt.MOPObject+) && !adviceexecution();
+	pointcut TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_beforeborrow() : (call(* KeyedObjectPool+.borrowObject(..))) && MOP_CommonPointCut();
+	before () : TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_beforeborrow() {
+		TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_activated = true;
+		while (!TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock.tryLock()) {
+			Thread.yield();
+		}
+		++TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_beforeborrow_count;
+		//TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_beforemainborrow
+		{
+			if (TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_beforeborrow_count > 1) {
+				TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedEnforcementMonitor mainMonitor = null;
+
+				mainMonitor = TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_Monitor;
+
+				if (mainMonitor == null) {
+					mainMonitor = new TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedEnforcementMonitor();
+
+					TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_Monitor = mainMonitor;
+				}
+
+				try {
+					boolean cloned_monitor_condition_fail = false;
+					do {
+						TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedEnforcementMonitor clonedMonitor = (TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedEnforcementMonitor)mainMonitor.clone();
+						clonedMonitor.Prop_1_event_beforemainborrow();
+						if (clonedMonitor.MOP_conditionFail) {
+							clonedMonitor = null;
+							cloned_monitor_condition_fail = true;
+							break;
+						}
+						if (!clonedMonitor.Prop_1_Category_nonfail) {
+							clonedMonitor = null;
+							TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedMonitorAspect.TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock_cond.await();
+						}
+						else {
+							clonedMonitor = null;
+							break;
+						}
+					} while (true);
+
+					if (!cloned_monitor_condition_fail){
+						while (!TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedMonitorAspect.containsBlockedThread(mainMonitor.borrowThread)) {
+							if (!TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedMonitorAspect.containsThread(mainMonitor.borrowThread)) {
+								TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedMonitorAspect.TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock_cond.await();
+							}
+							TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedMonitorAspect.TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock_cond.await(50L, TimeUnit.MILLISECONDS);
+						}
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				mainMonitor.Prop_1_event_beforemainborrow();
+				TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedMonitorAspect.TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock_cond.signalAll();
+				if(mainMonitor.MOP_conditionFail){
+					mainMonitor.MOP_conditionFail = false;
+				} else {
+					if(mainMonitor.Prop_1_Category_nonfail) {
+						mainMonitor.Prop_1_handler_nonfail();
+					}
+				}
+			}
+		}
+		//TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_beforeborrow
+		{
+			TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedEnforcementMonitor mainMonitor = null;
+
+			mainMonitor = TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_Monitor;
+
+			if (mainMonitor == null) {
+				mainMonitor = new TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedEnforcementMonitor();
+
+				TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_Monitor = mainMonitor;
+			}
+
+			try {
+				boolean cloned_monitor_condition_fail = false;
+				do {
+					TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedEnforcementMonitor clonedMonitor = (TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedEnforcementMonitor)mainMonitor.clone();
+					clonedMonitor.Prop_1_event_beforeborrow();
+					if (clonedMonitor.MOP_conditionFail) {
+						clonedMonitor = null;
+						cloned_monitor_condition_fail = true;
+						break;
+					}
+					if (!clonedMonitor.Prop_1_Category_nonfail) {
+						clonedMonitor = null;
+						TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedMonitorAspect.TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock_cond.await();
+					}
+					else {
+						clonedMonitor = null;
+						break;
+					}
+				} while (true);
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			mainMonitor.Prop_1_event_beforeborrow();
+			TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedMonitorAspect.TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock_cond.signalAll();
+			if(mainMonitor.MOP_conditionFail){
+				mainMonitor.MOP_conditionFail = false;
+			} else {
+				if(mainMonitor.Prop_1_Category_nonfail) {
+					mainMonitor.Prop_1_handler_nonfail();
+				}
+			}
+		}
+		TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock.unlock();
+	}
+
+	// Declaration of the count variable for above pointcut
+	static int TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_beforeborrow_count = 0;
+
+	static HashMap<Thread, Runnable> TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_ThreadMonitor_ThreadToRunnable = new HashMap<Thread, Runnable>();
+	static Thread TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_ThreadMonitor_MainThread = null;
+	static HashSet<Thread> TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_ThreadMonitor_ThreadSet = new HashSet<Thread>();
+
+	static boolean containsBlockedThread(String name) {
+		while (!TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock.tryLock()) {
+			Thread.yield();
+		}
+		for (Thread t : TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_ThreadMonitor_ThreadSet) {
+			if (t.getName().equals(name)) {
+				if (t.getState() == Thread.State.BLOCKED || t.getState() == Thread.State.WAITING) {
+					TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock.unlock();
+					return true;
+				}
+			}
+		}
+		TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock.unlock();
+		return false;
+	}
+
+	static boolean containsThread(String name) {
+		while (!TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock.tryLock()) {
+			Thread.yield();
+		}
+		for (Thread t : TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_ThreadMonitor_ThreadSet) {
+			if (t.getName().equals(name)) {
+				TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock.unlock();
+				return true;
+			}
+		}
+		TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock.unlock();
+		return false;
+	}
+
+	after (Runnable r) returning (Thread t): ((call(Thread+.new(Runnable+,..)) && args(r,..))|| (initialization(Thread+.new(ThreadGroup+, Runnable+,..)) && args(ThreadGroup, r,..))) && MOP_CommonPointCut() {
+		while (!TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock.tryLock()) {
+			Thread.yield();
+		}
+		TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_ThreadMonitor_ThreadToRunnable.put(t, r);
+		TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock.unlock();
+	}
+
+	after (Thread t): ( execution(void Thread+.run()) && target(t) ) && MOP_CommonPointCut() {
+		while (!TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock.tryLock()) {
+			Thread.yield();
+		}
+		TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_ThreadMonitor_ThreadSet.remove(Thread.currentThread());
+		TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock.unlock();
+	}
+
+	after (Runnable r): ( execution(void Runnable+.run()) && !execution(void Thread+.run()) && target(r) ) && MOP_CommonPointCut() {
+		while (!TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock.tryLock()) {
+			Thread.yield();
+		}
+		TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_ThreadMonitor_ThreadSet.remove(Thread.currentThread());
+		TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock.unlock();
+	}
+
+	before (): (execution(void *.main(..)) ) && MOP_CommonPointCut() {
+		while (!TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock.tryLock()) {
+			Thread.yield();
+		}
+		if(TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_ThreadMonitor_MainThread == null){
+			TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_ThreadMonitor_MainThread = Thread.currentThread();
+			TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_ThreadMonitor_ThreadSet.add(Thread.currentThread());
+			TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock_cond.signalAll();
+		}
+		javamoprt.MOPDeadlockDetector.startDeadlockDetectionThread(TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_ThreadMonitor_ThreadSet, TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_ThreadMonitor_MainThread, TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock, new TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedEnforcementMonitor.TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImprovedEnforcementMonitorDeadlockCallback());
+		TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock.unlock();
+	}
+
+	after (): (execution(void *.main(..)) ) && MOP_CommonPointCut() {
+		while (!TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock.tryLock()) {
+			Thread.yield();
+		}
+		TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_ThreadMonitor_ThreadSet.remove(Thread.currentThread());
+		TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock.unlock();
+	}
+
+	after (Thread t): (call(void Thread+.start()) && target(t)) && MOP_CommonPointCut() {
+		while (!TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock.tryLock()) {
+			Thread.yield();
+		}
+		TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_ThreadMonitor_ThreadSet.add(t);
+		TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock_cond.signalAll();
+		TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_MOPLock.unlock();
+	}
+
+	class TestGenericKeyedObjectPool_testBlockedKeyDoesNotBlockPoolImproved_DummyHookThread extends Thread {
+		public void run(){
+		}
+	}
+}

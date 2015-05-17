@@ -1,0 +1,27 @@
+import java.util.*;
+import java.util.concurrent.*;
+
+enforce LinkedBlockingDeque_testBlockingTake() {
+	
+	String takeThread = "";
+	
+	event beforeinterrupt before() :
+		call(* Thread+.interrupt(..)) && threadBlocked(takeThread){
+		}
+
+	event beforetake before() :
+		call(* LinkedBlockingDeque+.take(..)) {
+		takeThread = Thread.currentThread().getName();
+		}
+
+	ptltl : beforeinterrupt => <*> beforetake	
+
+	@validation {
+		System.out.println("validate.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

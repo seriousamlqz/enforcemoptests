@@ -1,0 +1,40 @@
+package org.jboss.cache.lock;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.locks.*;
+import org.junit.Assert;
+import org.jboss.cache.lock.*;
+import org.jboss.cache.lock.ReadWriteLockWithUpgrade.ReaderLock;
+import org.jboss.cache.lock.ReadWriteLockWithUpgrade.WriterLock;
+
+enforce NonBlockingWriterLockTest_testUpgradeWithMultipleReaders() {
+	
+	event beforetrylock before() :
+		call(* Lock+.tryLock(..)) && target(ReaderLock) && threadName("t2"){
+		}
+
+
+	event beforeunlock before() :
+		call(* Lock+.unlock(..)) && target(ReaderLock) && threadName("t1"){
+		}
+
+	event aftertrylock after() :
+		call(* Lock+.tryLock(..)) && target(ReaderLock) && threadName("t1"){
+		}
+
+	event afterupgrade after() :
+		call(* ReadWriteLockWithUpgrade+.upgradeLockAttempt(..)) && threadName("t2"){
+		}
+
+
+	ere : aftertrylock beforetrylock afterupgrade beforeunlock
+
+	@nonfail {
+		System.out.println("validate.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

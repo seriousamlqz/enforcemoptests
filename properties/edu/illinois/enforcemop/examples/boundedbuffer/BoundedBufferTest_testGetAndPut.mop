@@ -1,0 +1,24 @@
+import java.util.*;
+import java.util.concurrent.*;
+import edu.illinois.enforcemop.examples.boundedbuffer.*;
+
+enforce BoundedBufferTest_PutBeforeGet(BoundedBuffer b) {
+
+	event afterput after(BoundedBuffer b) :
+		call(* BoundedBuffer.put(..)) && target(b) && threadName("putThread") {
+		}
+	event beforeget before(BoundedBuffer b) :
+		call(* BoundedBuffer.get(..)) && target(b) && threadName("getThread") {
+		}
+
+	ptltl : beforeget =>  <*> afterput	
+
+	@validation {
+		System.out.println("validate.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

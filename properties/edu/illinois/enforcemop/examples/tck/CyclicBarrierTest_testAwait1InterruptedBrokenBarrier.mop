@@ -1,0 +1,32 @@
+import java.util.*;
+import java.util.concurrent.*;
+
+enforce CyclicBarrierTest_testAwait1InterruptedBrokenBarrier() {
+	
+	String waitThreadOne = "";
+	String waitThreadTwo = "";
+	
+	event beforeinterrupt before() :
+		call(* Thread+.interrupt(..)) && threadBlocked(waitThreadOne) && threadBlocked(waitThreadTwo){
+		}
+
+	event beforeawait before() :
+		call(* CyclicBarrier+.await(..)) {
+		if (waitThreadOne.equals("")) {
+		   waitThreadOne = Thread.currentThread().getName();
+		} else if (waitThreadTwo.equals("")) {
+		  waitThreadTwo = Thread.currentThread().getName();
+		}
+		}
+
+	ere : beforeawait beforeawait beforeinterrupt
+
+	@nonfail {
+		System.out.println("nonfail.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

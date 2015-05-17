@@ -1,0 +1,34 @@
+package edu.illinois.enforcemop.examples.tck;
+
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.locks.AbstractQueuedLongSynchronizer.ConditionObject;
+import edu.illinois.enforcemop.examples.tck.*;
+
+enforce AbstractQueuedLongSynchronizerTest_testAwait() {
+	
+	String interruptibleThread = "";
+
+
+	event beforeacquire before():
+	      call (* AbstractQueuedLongSynchronizer+.acquire(..)) && threadBlocked(interruptibleThread) && threadName("main"){
+	      }
+
+	event beforeawait before():
+	      call (* ConditionObject+.await(..)){
+	      	   interruptibleThread = Thread.currentThread().getName();
+	      }
+
+ 
+		
+	ere : beforeawait beforeacquire
+
+	@nonfail {
+		System.out.println("validate.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

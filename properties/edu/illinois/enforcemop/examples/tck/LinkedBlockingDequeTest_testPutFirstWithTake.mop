@@ -1,0 +1,35 @@
+import java.util.*;
+import java.util.concurrent.*;
+
+enforce LinkedBlockingDeque_testPutFirstWithTake() {
+	
+	String putThread = "";
+        boolean checked = false;	
+	event beforeinterrupt before() :
+		call(* Thread+.interrupt(..)) && threadBlocked(putThread){
+		}
+
+	event beforecheck before() :
+		call(* LinkedBlockingDeque+.remainingCapacity(..)) && threadBlocked(putThread) && condition(!checked){
+                       checked = true;
+		}
+
+	event beforeput before() :
+		call(* LinkedBlockingDeque+.putFirst(..)) {
+		       if (putThread.equals("")) {
+		       	  putThread = Thread.currentThread().getName();
+		       }
+		}
+
+
+	ere : beforeput+ beforecheck beforeput+ beforeinterrupt
+
+	@nonfail {
+		System.out.println("nonfail.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

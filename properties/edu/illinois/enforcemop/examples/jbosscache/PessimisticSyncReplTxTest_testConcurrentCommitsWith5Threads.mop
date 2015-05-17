@@ -1,0 +1,51 @@
+import java.util.*;
+import java.util.concurrent.*;
+import org.junit.Assert;
+import javax.transaction.NotSupportedException;
+import javax.transaction.RollbackException;
+import javax.transaction.Status;
+import javax.transaction.Synchronization;
+import javax.transaction.SystemException;
+import javax.transaction.Transaction;
+import javax.transaction.TransactionManager;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.jboss.cache.Cache;
+import org.jboss.cache.CacheException;
+import org.jboss.cache.CacheSPI;
+import org.jboss.cache.Fqn;
+import org.jboss.cache.UnitTestCacheFactory;
+import org.jboss.cache.config.Configuration;
+import org.jboss.cache.lock.IsolationLevel;
+import org.jboss.cache.lock.TimeoutException;
+import org.jboss.cache.notifications.annotation.CacheListener;
+import org.jboss.cache.notifications.annotation.NodeModified;
+import org.jboss.cache.transaction.TransactionSetup;
+import org.jboss.cache.util.CachePrinter;
+import org.jboss.cache.util.TestingUtil;
+
+
+import edu.illinois.enforcemop.examples.jbosscache.*;
+
+enforce PessimisticSyncReplTxTest_testConcurrentCommitsWith5Threads() {
+	
+	
+	event afterput after() :
+		call(* CacheSPI+.put(..)) && within(PessimisticSyncReplTxTest){
+		}
+
+	event beforejoin before() :
+		call(* Thread+.join(..)) {}
+
+	ere : afterput afterput afterput afterput afterput beforejoin*
+
+	@nonfail {
+		System.out.println("validate.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

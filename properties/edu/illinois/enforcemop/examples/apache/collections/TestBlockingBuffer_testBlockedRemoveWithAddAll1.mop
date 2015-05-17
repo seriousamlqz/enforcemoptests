@@ -1,0 +1,29 @@
+import java.util.*;
+import java.util.concurrent.*;
+
+import org.apache.commons.collections.Buffer;
+import org.apache.commons.collections.buffer.BlockingBuffer;
+
+enforce TestBlockingBuffer_testBlockedRemoveWithAddAll1(BlockingBuffer b) {
+        int number = 0;
+	event beforeaddall before(BlockingBuffer b) :
+		call(* Buffer+.addAll(..)) && target(b) && threadName("main") && threadBlocked("readThread1")  && threadBlocked("readThread2") && condition(number == 0) {
+         	       ++number;
+		}
+
+	event beforeremove before(BlockingBuffer b) :
+		call(* Buffer+.remove(..)) && target(b) {
+
+		}
+
+	ptltl :  beforeaddall =>  <*> beforeremove 
+
+	@validation {
+		System.out.println("validate.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

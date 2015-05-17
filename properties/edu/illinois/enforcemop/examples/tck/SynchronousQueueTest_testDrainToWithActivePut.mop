@@ -1,0 +1,31 @@
+import java.util.*;
+import java.util.concurrent.*;
+
+enforce SynchronousQueueTest_testDrainToWithActivePut() {
+	
+	String putThread = "";
+	
+	event beforedrain before(SynchronousQueue q) :
+		call(* SynchronousQueue+.drainTo(..)) && threadBlocked(putThread) && target(q){
+		}
+
+
+	event beforeput before(SynchronousQueue q) :
+		call(* SynchronousQueue+.put(..)) && target(q){
+		       if (putThread.equals("")) {
+		       	  putThread = Thread.currentThread().getName();
+		       }
+		}
+
+
+	ptltl : beforedrain => <*> beforeput
+
+	@validation {
+		System.out.println("validate.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

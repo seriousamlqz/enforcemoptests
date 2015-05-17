@@ -1,0 +1,42 @@
+package edu.illinois.enforcemop.examples.tck;
+
+import java.util.*;
+import java.util.concurrent.*;
+import edu.illinois.enforcemop.examples.tck.*;
+
+enforce AbstractQueuedLongSynchronizerTest_testAcquireInterruptibly1() {
+	
+	String interruptibleThread = "";
+
+	event beforerelease before():
+	      call (* AbstractQueuedLongSynchronizer+.release(..)) {
+	      }
+
+	event beforeinterrupt before():
+	      call (* Thread+.interrupt(..)) && threadBlocked(interruptibleThread){
+	      }
+
+
+	event beforeacq before():
+	      call (* AbstractQueuedLongSynchronizer+.acquireInterruptibly(..)) {
+	      	   interruptibleThread = Thread.currentThread().getName();
+	      }
+
+	event afterinterruptiblefinish after() :
+	      	execution(* Runnable+.run(..)) && threadName(interruptibleThread){
+      	      }
+
+
+ 
+		
+	ere : beforeacq beforeinterrupt afterinterruptiblefinish beforerelease
+
+	@nonfail {
+		System.out.println("validate.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

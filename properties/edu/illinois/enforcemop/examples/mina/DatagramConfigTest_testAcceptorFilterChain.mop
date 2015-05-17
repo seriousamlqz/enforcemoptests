@@ -1,0 +1,30 @@
+package edu.illinois.enforcemop.examples.mina;
+import java.util.*;
+import java.util.concurrent.*;
+import org.junit.Assert;
+
+import org.apache.mina.core.filterchain.IoFilter;
+import org.apache.mina.core.filterchain.IoFilterAdapter;
+import org.apache.mina.core.service.IoHandler;
+import org.apache.mina.core.service.IoHandlerAdapter;
+import edu.illinois.enforcemop.examples.mina.DatagramConfigTest.MockFilter;
+import edu.illinois.enforcemop.examples.mina.DatagramConfigTest.MockHandler;
+
+enforce DatagramConfigTest_testAcceptorFilterChain() {
+	
+	event afterreceive after() : call(* Object+.messageReceived(..)) {}		
+	
+	event beforecheck before() :
+		call(* DatagramConfigTest+.getResult(..)){ }
+
+	ere : afterreceive beforecheck
+
+	@nonfail {
+		System.out.println("non fail.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

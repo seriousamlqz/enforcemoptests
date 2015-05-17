@@ -1,0 +1,28 @@
+package edu.illinois.enforcemop.examples.tck;
+
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.locks.LockSupport;
+import edu.illinois.enforcemop.examples.tck.*;
+
+enforce PhaserTest_testArrive2(Phaser p) {
+
+	event aftercheck after(Phaser p):
+	      call (* Phaser+.isTerminated(..)) && target(p){
+	      }
+
+	event beforearrive before(Phaser p):
+	      call (* Phaser+.arriveAndDeregister(..)) && target(p){
+	      }
+		
+	ere : aftercheck beforearrive
+
+	@nonfail {
+		System.out.println("validate.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

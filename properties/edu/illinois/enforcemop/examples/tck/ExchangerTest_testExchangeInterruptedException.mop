@@ -1,0 +1,29 @@
+package edu.illinois.enforcemop.examples.tck;
+
+import java.util.*;
+import java.util.concurrent.*;
+import edu.illinois.enforcemop.examples.tck.*;
+
+enforce ExchangerTest_testExchangeInterruptedException() {
+	
+	String exchangeThread = "";
+	event beforeexchange before():
+	      call (* Exchanger+.exchange(..)) {
+	      	   exchangeThread = Thread.currentThread().getName();
+	      }
+
+	event beforeinterrupt before():
+	      call (* Thread+.interrupt(..)) && threadBlocked(exchangeThread){
+	      }
+		
+	ere : beforeexchange beforeinterrupt
+
+	@nonfail {
+		System.out.println("validate.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+

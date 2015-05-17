@@ -1,0 +1,35 @@
+package edu.illinois.enforcemop.examples.tck;
+
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.locks.Condition;
+import edu.illinois.enforcemop.examples.tck.*;
+import java.util.concurrent.locks.ReentrantLock.*;
+
+enforce ReentrantLockTest_testAwaitUninterruptibly() {
+	
+	String interruptibleThread = "";
+
+
+	event beforelock before():
+	      call (* Lock+.lock(..)) && threadBlocked(interruptibleThread) && threadName("main"){
+	      }
+
+	event beforeawait before():
+	      call (* Condition+.awaitUninterruptibly(..)){
+	      	   interruptibleThread = Thread.currentThread().getName();
+	      }
+
+ 
+		
+	ere : beforeawait beforelock
+
+	@nonfail {
+		System.out.println("validate.");
+	}
+	
+	@deadlock {
+		System.out.println("Deadlock happened! Please restart!");
+	}
+}
+
